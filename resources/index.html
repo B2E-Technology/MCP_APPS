@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary:       #2563EB;
+    --primary-dark:  #1D4ED8;
+    --primary-light: #EFF6FF;
+    --success:       #059669;
+    --success-bg:    #ECFDF5;
+    --danger:        #DC2626;
+    --danger-bg:     #FEF2F2;
+    --warning:       #D97706;
+    --warning-bg:    #FFFBEB;
+    --bg:            #F0F2F5;
+    --surface:       #FFFFFF;
+    --surface2:      #F8FAFC;
+    --text:          #0F172A;
+    --muted:         #64748B;
+    --border:        #E2E8F0;
+    --shadow:        0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-lg:     0 10px 30px rgba(15,23,42,0.12);
+    --header-bg:     #1E3A5F;
+    --header-text:   #FFFFFF;
+    --header-sub:    rgba(255,255,255,0.65);
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Header ── */
+  .app-header {
+    background: var(--header-bg); color: var(--header-text);
+    padding: 18px 32px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18); position: sticky; top: 0; z-index: 30;
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-icon  { font-size: 26px; line-height: 1; }
+  .header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-subtitle { font-size: 12px; color: var(--header-sub); margin-top: 2px; }
+  .header-meta { font-size: 12px; color: var(--header-sub); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn-refresh {
+    padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.12); color: #fff; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-refresh:hover { background: rgba(255,255,255,0.22); }
+
+  /* ── Breadcrumb ── */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 24px 0; max-width: 1280px; margin: 0 auto;
+    font-size: 13px; color: var(--muted);
+  }
+  .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 500; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb span { color: var(--muted); }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 24px 40px; }
+
+  /* ── Buttons ── */
+  .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'Inter', sans-serif; transition: all 0.15s; display: inline-flex; align-items: center; gap: 7px; }
+  .btn-primary  { background: var(--primary); color: #fff; }
+  .btn-primary:hover  { background: var(--primary-dark); }
+  .btn-outline  { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover  { border-color: #CBD5E1; background: var(--surface2); }
+  .btn-danger   { background: var(--danger); color: #fff; }
+  .btn-danger:hover   { background: #B91C1C; }
+  .btn-success  { background: var(--success); color: #fff; }
+  .btn-success:hover  { background: #047857; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+
+  /* ── Page switching ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Stats ── */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 18px; box-shadow: var(--shadow);
+    border-left: 4px solid var(--accent, var(--primary));
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 10px; font-weight: 600; }
+  .stat-value { font-size: 30px; font-weight: 700; color: var(--accent, var(--primary)); line-height: 1; }
+
+  /* ── Charts row ── */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 700px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  .chart-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+  .chart-canvas { width: 100%; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding-bottom: 24px; position: relative; }
+  .bar-chart::after { content: ""; position: absolute; bottom: 24px; left: 0; right: 0; border-bottom: 1px solid var(--border); }
+  .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity 0.15s; min-width: 28px; }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { font-size: 10px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bar-val { font-size: 10px; font-weight: 600; color: var(--text); }
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { color: var(--muted); }
+  .legend-val { font-weight: 600; color: var(--text); margin-left: auto; padding-left: 8px; }
+
+  /* ── Filter bar ── */
+  .filter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .filter-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 150px; flex: 1; }
+  .filter-group label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; }
+  .filter-group select,
+  .filter-group input[type="text"] {
+    padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; font-family: 'Inter', sans-serif; background: var(--surface2);
+    color: var(--text); outline: none; transition: all 0.15s; cursor: pointer;
+  }
+  .filter-group select:focus,
+  .filter-group input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); background: var(--surface); }
+  .search-inner { position: relative; }
+  .search-inner input { padding-left: 34px; width: 100%; padding-top: 9px; padding-bottom: 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; background: var(--surface2); color: var(--text); outline: none; transition: all 0.15s; }
+  .search-inner input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); background: var(--surface); }
+  .search-inner svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .pill { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--muted); transition: all 0.15s; }
+  .pill.active { color: #fff; border-color: transparent; background: var(--pill-bg, var(--primary)); }
+  .pill:hover:not(.active) { border-color: #CBD5E1; color: var(--text); }
+
+  /* ── Table card ── */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; overflow-x: auto; margin-bottom: 24px; box-shadow: var(--shadow); }
+  .table-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .table-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .table-card-meta  { font-size: 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 11px 16px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; }
+  thead th.actions-col { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--primary-light); }
+  td { padding: 12px 16px; font-size: 13px; }
+  td.code  { font-family: 'Courier New', monospace; font-size: 12px; color: var(--primary); font-weight: 600; }
+  td.num   { font-variant-numeric: tabular-nums; text-align: right; }
+  td.date  { color: var(--muted); }
+  td.actions { text-align: right; white-space: nowrap; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; margin-left: 6px; }
+  .icon-btn:hover { background: var(--surface2); }
+  .icon-btn.edit:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .icon-btn.del:hover  { border-color: var(--danger);  color: var(--danger);  background: var(--danger-bg); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-on  { background: var(--success); }
+  .dot-off { background: var(--danger); }
+  .empty { padding: 48px; text-align: center; color: var(--muted); font-size: 14px; }
+  .page-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  /* ── Delete confirm row ── */
+  .del-confirm-row { background: var(--danger-bg); }
+  .del-confirm-row td { padding: 10px 16px; }
+  .del-confirm-inner { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--danger); font-weight: 500; }
+  .del-confirm-inner .del-btns { display: flex; gap: 8px; margin-left: auto; }
+
+  /* ── Form page ── */
+  .form-page-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: var(--shadow-lg); max-width: 680px; margin: 0 auto;
+    overflow: hidden;
+  }
+  .form-page-head {
+    background: var(--header-bg); color: var(--header-text);
+    padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .form-page-head-title { font-size: 18px; font-weight: 700; }
+  .form-page-head-sub   { font-size: 12px; color: var(--header-sub); margin-top: 3px; }
+  .form-page-body  { padding: 28px; }
+  .form-page-foot  { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: var(--surface2); }
+
+  /* form fields */
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .field label .req { color: var(--danger); }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: all 0.15s;
+    background: var(--surface); color: var(--text);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  .field .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+  /* ── Toast ── */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 11px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); transition: transform 0.25s; z-index: 200; white-space: nowrap; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.ok  { background: var(--success); }
+  #toast.err { background: var(--danger); }
+
+  /* ── Loading / Error ── */
+  #loading { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--primary); animation: spin 0.8s linear infinite; }
+  #loading p { color: var(--muted); font-size: 13px; }
+  .error-box { background: var(--danger-bg); border: 1px solid #FECACA; border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; display: none; }
+  .error-box.show { display: block; }
+  .error-title { font-weight: 700; color: var(--danger); margin-bottom: 4px; font-size: 14px; }
+  .error-msg   { font-size: 13px; }
+  .error-code  { font-family: 'Courier New', monospace; font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Loading records…</p>
+</div>
+
+<!-- Shared sticky header -->
+<header class="app-header" id="app-header" style="display:none">
+  <div class="header-brand">
+    <div class="header-icon" id="header-icon">📋</div>
+    <div>
+      <div class="header-title"    id="page-title"></div>
+      <div class="header-subtitle" id="page-subtitle"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div class="header-meta"    id="header-meta"></div>
+    <div id="header-actions"></div>
+  </div>
+</header>
+
+<!-- Breadcrumb (hidden on list page) -->
+<nav class="breadcrumb" id="breadcrumb" style="display:none">
+  <a href="#" onclick="showPage('list');return false;" id="bc-home">Home</a>
+  <span>›</span>
+  <span id="bc-current"></span>
+</nav>
+
+<!-- ════════════════════════════════
+     PAGE: LIST
+     ════════════════════════════════ -->
+<div id="page-list" class="page active">
+  <div class="wrap">
+
+    <div class="error-box" id="error-box">
+      <div class="error-title">Request failed</div>
+      <div class="error-msg"  id="error-msg"></div>
+      <div class="error-code" id="error-code"></div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats" id="stats"></div>
+
+    <!-- Charts row -->
+    <div class="charts-row" id="charts-row" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title"  id="bar-chart-title">Chart</div>
+        <div class="chart-canvas" id="bar-chart-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"  id="donut-chart-title">Distribution</div>
+        <div class="chart-canvas" id="donut-chart-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-row" id="filter-row">
+        <div class="filter-group" id="search-box" style="flex:2;min-width:220px">
+          <label>Search</label>
+          <div class="search-inner">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="search" placeholder="Search…" oninput="applyFilters()">
+          </div>
+        </div>
+        <div id="filter-dropdowns" style="display:contents"></div>
+        <div id="pills" class="filter-pills" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <div class="table-card-title" id="table-title">Records</div>
+          <div class="table-card-meta"  id="table-meta"></div>
+        </div>
+        <div class="page-actions" id="table-actions"></div>
+      </div>
+      <table>
+        <thead><tr id="thead-row"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     PAGE: FORM  (Create / Edit)
+     ════════════════════════════════ -->
+<div id="page-form" class="page">
+  <div class="wrap">
+    <div class="form-page-card">
+      <div class="form-page-head">
+        <div>
+          <div class="form-page-head-title" id="form-page-title">New Record</div>
+          <div class="form-page-head-sub"   id="form-page-sub"></div>
+        </div>
+      </div>
+      <div class="form-page-body"  id="form-fields"></div>
+      <div class="form-page-foot">
+        <button class="btn btn-outline" onclick="showPage('list')">← Cancel</button>
+        <button class="btn btn-success" id="form-save" onclick="saveForm()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save Record
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal (lightweight — only for irreversible action) -->
+<div id="del-modal" style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px">
+  <div style="background:var(--surface);border-radius:14px;box-shadow:var(--shadow-lg);width:100%;max-width:400px;overflow:hidden;animation:pop 0.18s ease">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border)">
+      <div style="font-weight:700;font-size:16px;color:var(--danger)">⚠ Delete Record</div>
+    </div>
+    <div style="padding:20px 24px">
+      <p style="font-size:14px;line-height:1.6;color:var(--text)">Are you sure you want to permanently delete this record?</p>
+      <p id="del-label" style="margin-top:10px;font-family:'Courier New',monospace;font-size:12px;color:var(--danger);background:var(--danger-bg);padding:8px 12px;border-radius:6px;word-break:break-all"></p>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--surface2)">
+      <button class="btn btn-outline" onclick="closeDelModal()">Cancel</button>
+      <button class="btn btn-danger"  id="del-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Load order: config → api → app -->
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+
+<style>
+  @keyframes pop { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
+</style>
+</body>
+</html>
